@@ -34,9 +34,19 @@ st.markdown("""
         color: #000000 !important;
     }
     
-    /* Force all text to be dark */
-    .stApp p, .stApp span, .stApp div, .stApp label {
+    /* Force all text to be dark - EXCEPT inside buttons */
+    .stApp p, .stApp div, .stApp label {
         color: #000000 !important;
+    }
+    
+    /* Exclude button text from the dark text rule */
+    .stApp .stButton p, 
+    .stApp .stButton span, 
+    .stApp .stButton div,
+    .stButton button p,
+    .stButton button span,
+    .stButton button div {
+        color: #ffffff !important;
     }
     
     /* Global styles */
@@ -115,11 +125,15 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    /* Buttons */
-    .stButton > button {
+    /* ========== BUTTONS - FORCE WHITE TEXT ========== */
+    .stButton > button,
+    .stButton button,
+    [data-testid="stButton"] button,
+    [data-testid="baseButton-secondary"],
+    [data-testid="baseButton-primary"] {
         background-color: #000000 !important;
         color: #ffffff !important;
-        border: none;
+        border: none !important;
         border-radius: 6px;
         padding: 0.75rem 2rem;
         font-weight: 500;
@@ -128,8 +142,23 @@ st.markdown("""
         width: 100%;
     }
     
-    .stButton > button:hover {
+    /* Button text specifically */
+    .stButton > button *,
+    .stButton button *,
+    [data-testid="stButton"] button *,
+    .stButton > button p,
+    .stButton > button span {
+        color: #ffffff !important;
+    }
+    
+    .stButton > button:hover,
+    .stButton button:hover,
+    [data-testid="stButton"] button:hover {
         background-color: #333333 !important;
+        color: #ffffff !important;
+    }
+    
+    .stButton > button:hover * {
         color: #ffffff !important;
     }
     
