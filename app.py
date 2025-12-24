@@ -841,19 +841,21 @@ def display_timer():
 # ============================================================================
 def show_welcome_screen():
     """Display the welcome/name entry screen."""
-    st.markdown('<h1 class="main-title">Daily Trivia</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Btown Brief Trivia</h1>', unsafe_allow_html=True)
     st.markdown(f'<p class="subtitle">Test your knowledge in {TIMER_SECONDS} seconds</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
+        st.markdown("**Enter your name to begin.** Write the same UNIQUE name every week so your score gets tracked.")
         name = st.text_input(
-            "Enter your name to begin",
+            "Your name",
             placeholder="Your name...",
             key="name_input",
-            label_visibility="visible"
+            label_visibility="collapsed"
         )
+        st.caption("⚠️ Only play once per quiz please!")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -882,10 +884,10 @@ def show_welcome_screen():
     st.markdown("---")
     st.markdown(f"""
     **How to Play:**
-    - Answer {NUM_QUESTIONS} trivia questions
-    - You have {TIMER_SECONDS} seconds to complete
-    - Your score and time will be recorded
-    - Compete for the top of the leaderboard!
+    - **The Challenge:** Answer {NUM_QUESTIONS} trivia questions.
+    - **Beat the Clock:** You have {TIMER_SECONDS} seconds to complete (must stay on the page!).
+    - **Get on the Board:** Your score and time are recorded.
+    - **Top the Charts:** Compete for the #1 spot in Btown.
     """)
     
     # Hall of Fame link
@@ -1017,6 +1019,13 @@ def submit_quiz():
 
 def show_results_screen():
     """Display the results and leaderboard."""
+    # Force scroll to top of page
+    st.markdown("""
+        <script>
+            window.parent.document.querySelector('section.main').scrollTo(0, 0);
+        </script>
+    """, unsafe_allow_html=True)
+    
     st.markdown('<h1 class="main-title">Quiz Complete!</h1>', unsafe_allow_html=True)
     
     # Score display
@@ -1075,8 +1084,8 @@ def show_results_screen():
     
     st.markdown("---")
     
-    # Weekly Leaderboard (shown first)
-    st.markdown("### 🏅 Weekly Leaderboard")
+    # This Quiz's Leaderboard (shown first)
+    st.markdown("### 🏅 This Quiz's Leaderboard")
     show_weekly_leaderboard()
     
     st.divider()
@@ -1087,16 +1096,38 @@ def show_results_screen():
     
     st.markdown("---")
     
-    # Play again button
+    # Share section
+    st.markdown("### 📤 Share the Fun!")
+    st.markdown("Challenge your friends to beat your score!")
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Play Again", use_container_width=True):
-            # Reset session state
-            for key in ['game_started', 'start_time', 'questions', 'answers', 
-                       'submitted', 'score', 'time_taken', 'connection_error']:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
+        # Get the current app URL for sharing
+        share_text = f"I just scored {st.session_state.score}/{st.session_state.questions_total} on Btown Brief Trivia! Can you beat me? 🧠"
+        
+        # Create share links
+        twitter_url = f"https://twitter.com/intent/tweet?text={share_text}"
+        
+        st.link_button("🔗 Share on Twitter/X", twitter_url, use_container_width=True)
+    
+    st.markdown("---")
+    
+    # Homepage promo
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem; background-color: #f8f8f8; border-radius: 8px;">
+        <p style="margin-bottom: 0.5rem;"><strong>Want more Btown content?</strong></p>
+        <p style="color: #666666; margin-bottom: 1rem;">Check out the full newsletter for local news, events, and more!</p>
+        <a href="https://BtownBrief.com" target="_blank" style="
+            display: inline-block;
+            background-color: #000000;
+            color: #ffffff !important;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+        ">Visit BtownBrief.com →</a>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def show_weekly_leaderboard():
@@ -1220,7 +1251,7 @@ def show_hall_of_fame_content():
 def show_hall_of_fame_standalone():
     """Display Hall of Fame as a standalone page."""
     st.markdown('<h1 class="main-title">🏆 Hall of Fame</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Career Stats & All-Time Rankings</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Btown Brief Trivia — Career Stats & All-Time Rankings</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
