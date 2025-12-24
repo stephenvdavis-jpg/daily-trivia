@@ -64,6 +64,17 @@ st.markdown("""
         color: #cccccc !important;
     }
     
+    /* Exclude timer-container from dark text rule */
+    .stApp .timer-container,
+    .stApp .timer-container *,
+    .stApp .timer-container p,
+    .stApp .timer-container div,
+    .stApp .timer-container span,
+    .stApp .timer-warning,
+    .stApp .timer-warning * {
+        color: #ffffff !important;
+    }
+    
     /* Global styles */
     html, body, [class*="css"] {
         font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -92,8 +103,9 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     
-    /* Timer display */
-    .timer-container {
+    /* ========== TIMER DISPLAY - FORCE WHITE TEXT ========== */
+    .timer-container,
+    div.timer-container {
         background-color: #000000 !important;
         color: #ffffff !important;
         padding: 1rem 2rem;
@@ -105,9 +117,20 @@ st.markdown("""
         font-variant-numeric: tabular-nums;
     }
     
-    .timer-warning {
+    .timer-container *,
+    div.timer-container * {
+        color: #ffffff !important;
+    }
+    
+    .timer-warning,
+    div.timer-warning {
         background-color: #333333 !important;
         animation: pulse 1s infinite;
+    }
+    
+    .timer-warning *,
+    div.timer-warning * {
+        color: #ffffff !important;
     }
     
     @keyframes pulse {
