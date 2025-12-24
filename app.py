@@ -661,29 +661,63 @@ def calculate_monthly_leaderboard(df):
     return stats.reset_index()
 
 
-def get_quiz_dates(df):
+def get_play_window(date):
     """
-    Get all unique dates when quizzes were played (globally).
-    These represent the available quiz dates.
+    Determine which play window a date falls into.
+    
+    Window A (Early Week): Monday (0) through Thursday (3)
+    Window B (Weekend): Friday (4) through Sunday (6)
+    
+    Returns a tuple of (year, week_number, window_letter) for comparison.
+    """
+    if isinstance(date, str):
+        date = pd.to_datetime(date).date()
+    elif hasattr(date, 'date'):
+        date = date.date()
+    
+    weekday = date.weekday()  # Monday=0, Sunday=6
+    year, week_num, _ = date.isocalendar()
+    
+    if weekday <= 3:  # Monday-Thursday = Window A
+        return (year, week_num, 'A')
+    else:  # Friday-Sunday = Window B
+        return (year, week_num, 'B')
+
+
+def get_all_windows_in_order():
+    """
+    Generate a list of all possible windows from a start date to now,
+    in reverse chronological order (most recent first).
+    """
+    windows = []
+    current_date = datetime.now().date()
+    
+    # Go back about 1 year (52 weeks * 2 windows)
+    start_date = current_date - timedelta(days=365)
+    
+    # Generate all windows
+    check_date = start_date
+    while check_date <= current_date:
+        window = get_play_window(check_date)
+        if window not in windows:
+            windows.append(window)
+        check_date += timedelta(days=1)
+    
+    # Return in reverse order (most recent first)
+    return list(reversed(windows))
+
+
+def calculate_streak(df, user_name):
+    """
+    Calculate a user's consecutive play streak using the window system.
+    
+    Window A (Early Week): Monday through Thursday
+    Window B (Weekend): Friday through Sunday
+    
+    A user maintains their streak if they have at least one submission
+    in consecutive windows.
     """
     if df.empty:
-        return []
-    
-    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-    unique_dates = df['Date'].dropna().dt.date.unique()
-    return sorted(unique_dates, reverse=True)  # Most recent first
-
-
-def calculate_streak(df, user_name, quiz_dates):
-    """
-    Calculate a user's consecutive play streak.
-    
-    Logic:
-    1. Get the dates the user played
-    2. Check if they played on the most recent quiz date
-    3. Count backwards through consecutive quiz dates they played
-    """
-    if df.empty or not quiz_dates:
         return 0
     
     # Get this user's play dates
@@ -692,15 +726,51 @@ def calculate_streak(df, user_name, quiz_dates):
         return 0
     
     user_df['Date'] = pd.to_datetime(user_df['Date'], errors='coerce')
-    user_dates = set(user_df['Date'].dropna().dt.date.unique())
+    user_dates = user_df['Date'].dropna().dt.date.unique()
     
-    if not user_dates:
+    if len(user_dates) == 0:
         return 0
     
-    # Count consecutive quiz dates the user played, starting from most recent
+    # Get the windows the user played in
+    user_windows = set()
+    for date in user_dates:
+        user_windows.add(get_play_window(date))
+    
+    # Get current window
+    current_window = get_play_window(datetime.now().date())
+    
+    # Get all windows in order (most recent first)
+    all_windows = get_all_windows_in_order()
+    
+    # Find where current window is in the list
+    try:
+        current_idx = all_windows.index(current_window)
+    except ValueError:
+        return 0
+    
+    # Count consecutive windows starting from current (or most recent played)
     streak = 0
-    for quiz_date in quiz_dates:
-        if quiz_date in user_dates:
+    
+    # First check if they played in current window
+    if current_window in user_windows:
+        streak = 1
+        start_idx = current_idx + 1
+    else:
+        # Check if they played in the previous window (grace period)
+        if current_idx + 1 < len(all_windows):
+            prev_window = all_windows[current_idx + 1]
+            if prev_window in user_windows:
+                streak = 1
+                start_idx = current_idx + 2
+            else:
+                return 0  # Missed both current and previous window
+        else:
+            return 0
+    
+    # Count backwards through consecutive windows
+    for i in range(start_idx, len(all_windows)):
+        window = all_windows[i]
+        if window in user_windows:
             streak += 1
         else:
             break  # Streak broken
@@ -710,14 +780,9 @@ def calculate_streak(df, user_name, quiz_dates):
 
 def calculate_all_streaks(df):
     """
-    Calculate streaks for all users.
+    Calculate streaks for all users using the window system.
     """
     if df.empty:
-        return pd.DataFrame(columns=['Name', 'Current_Streak', 'Last_Played'])
-    
-    quiz_dates = get_quiz_dates(df)
-    
-    if not quiz_dates:
         return pd.DataFrame(columns=['Name', 'Current_Streak', 'Last_Played'])
     
     # Get unique users
@@ -725,7 +790,7 @@ def calculate_all_streaks(df):
     
     streaks = []
     for user in users:
-        streak = calculate_streak(df, user, quiz_dates)
+        streak = calculate_streak(df, user)
         
         # Get last played date
         user_df = df[df['Name'] == user].copy()
@@ -1010,14 +1075,15 @@ def show_results_screen():
     
     st.markdown("---")
     
-    # Tabs for Leaderboard and Hall of Fame
-    tab1, tab2 = st.tabs(["🏅 Weekly Leaderboard", "🏆 Hall of Fame"])
+    # Weekly Leaderboard (shown first)
+    st.markdown("### 🏅 Weekly Leaderboard")
+    show_weekly_leaderboard()
     
-    with tab1:
-        show_weekly_leaderboard()
+    st.divider()
     
-    with tab2:
-        show_hall_of_fame_content()
+    # Hall of Fame / Career Stats (shown below)
+    st.markdown("### 🏆 Hall of Fame — Career Stats")
+    show_hall_of_fame_content()
     
     st.markdown("---")
     
@@ -1136,7 +1202,7 @@ def show_hall_of_fame_content():
     
     with stat_tab4:
         st.markdown("#### 🔥 Streak Leaders")
-        st.markdown("*Most consecutive quiz participations (Mon & Fri)*")
+        st.markdown("*Consecutive windows played (Mon-Thu & Fri-Sun)*")
         
         streak_df = calculate_all_streaks(history)
         
