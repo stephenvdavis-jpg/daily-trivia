@@ -1,13 +1,21 @@
 """
 Daily Trivia App
 A minimalist trivia application with Google Sheets integration.
+Features: Global History, Advanced Stats, Streak Tracking, Hall of Fame
 """
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from streamlit_gsheets import GSheetsConnection
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+NUM_QUESTIONS = 5  # Change this to 10 if you want more questions
+TIMER_SECONDS = 60  # Change this to adjust quiz duration
+QUIZ_DAYS = [0, 4]  # Monday=0, Friday=4 (days quizzes are released)
 
 # ============================================================================
 # PAGE CONFIGURATION
@@ -132,7 +140,7 @@ st.markdown("""
     div.timer-warning * {
         color: #ffffff !important;
     }
-    
+
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.7; }
@@ -199,7 +207,7 @@ st.markdown("""
     .stButton > button:hover * {
         color: #ffffff !important;
     }
-    
+
     /* Input fields */
     .stTextInput > div > div > input {
         border: 2px solid #000000 !important;
@@ -310,7 +318,7 @@ st.markdown("""
         color: #cccccc !important;
         margin-top: 0.5rem;
     }
-    
+
     /* Error messages */
     .error-box {
         background-color: #f8f8f8 !important;
@@ -341,6 +349,56 @@ st.markdown("""
         border-top: 1px solid #e0e0e0;
         margin: 2rem 0;
     }
+    
+    /* ========== STAT CARDS ========== */
+    .stat-card {
+        background-color: #f8f8f8 !important;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        margin: 0.5rem 0;
+    }
+    
+    .stat-card * {
+        color: #000000 !important;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #000000 !important;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #666666 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.5rem;
+    }
+    
+    .stat-sublabel {
+        font-size: 0.75rem;
+        color: #999999 !important;
+        margin-top: 0.25rem;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        color: #000000 !important;
+        font-weight: 500;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        color: #000000 !important;
+        border-bottom-color: #000000 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -359,7 +417,8 @@ def init_session_state():
         'submitted': False,
         'score': 0,
         'time_taken': 0,
-        'connection_error': None
+        'connection_error': None,
+        'questions_total': NUM_QUESTIONS
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -395,19 +454,20 @@ def fetch_questions(conn):
         if not all(col in df.columns for col in required_cols):
             return None, f"Missing columns. Required: {required_cols}"
         
-        # Get 5 random questions (or all if less than 5)
-        n_questions = min(5, len(df))
+        # Get random questions (based on NUM_QUESTIONS config)
+        n_questions = min(NUM_QUESTIONS, len(df))
         if n_questions == 0:
             return None, "No questions found in the sheet."
         
         questions = df.sample(n=n_questions).reset_index(drop=True)
+        st.session_state.questions_total = n_questions
         return questions, None
     except Exception as e:
         return None, f"Error fetching questions: {str(e)}"
 
 
 def append_to_leaderboard(conn, name, score, time_taken):
-    """Append a new entry to the Leaderboard sheet."""
+    """Append a new entry to the Leaderboard sheet (weekly view)."""
     try:
         # Read existing leaderboard
         existing = conn.read(worksheet="Leaderboard", ttl=1)
@@ -434,6 +494,36 @@ def append_to_leaderboard(conn, name, score, time_taken):
         return False, f"Error saving score: {str(e)}"
 
 
+def append_to_global_history(conn, name, score, time_taken, questions_total):
+    """Append a new entry to the Global_History sheet (permanent archive)."""
+    try:
+        # Read existing history
+        existing = conn.read(worksheet="Global_History", ttl=1)
+        
+        # Create new entry with all fields
+        new_entry = pd.DataFrame([{
+            'Name': name,
+            'Score': score,
+            'Time_Taken': time_taken,
+            'Questions_Total': questions_total,
+            'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'Date': datetime.now().strftime('%Y-%m-%d')
+        }])
+        
+        # Combine with existing data
+        if existing is not None and not existing.empty:
+            existing = existing.dropna(how='all')
+            updated = pd.concat([existing, new_entry], ignore_index=True)
+        else:
+            updated = new_entry
+        
+        # Write back to sheet
+        conn.update(worksheet="Global_History", data=updated)
+        return True, None
+    except Exception as e:
+        return False, f"Error saving to history: {str(e)}"
+
+
 def get_leaderboard(conn):
     """Fetch the current leaderboard."""
     try:
@@ -453,16 +543,217 @@ def get_leaderboard(conn):
         return pd.DataFrame(columns=['Name', 'Score', 'Time_Taken', 'Timestamp'])
 
 
+def get_global_history(conn):
+    """Fetch the global history for stats calculations."""
+    try:
+        df = conn.read(worksheet="Global_History", ttl=5)
+        if df is None or df.empty:
+            return pd.DataFrame(columns=['Name', 'Score', 'Time_Taken', 'Questions_Total', 'Timestamp', 'Date'])
+        
+        df = df.dropna(how='all')
+        
+        # Ensure Questions_Total exists and handle missing values (assume 5 for old data)
+        if 'Questions_Total' not in df.columns:
+            df['Questions_Total'] = 5
+        else:
+            df['Questions_Total'] = df['Questions_Total'].fillna(5)
+        
+        # Ensure Date column exists
+        if 'Date' not in df.columns and 'Timestamp' in df.columns:
+            df['Date'] = pd.to_datetime(df['Timestamp']).dt.strftime('%Y-%m-%d')
+        
+        return df
+    except Exception as e:
+        return pd.DataFrame(columns=['Name', 'Score', 'Time_Taken', 'Questions_Total', 'Timestamp', 'Date'])
+
+
+# ============================================================================
+# ADVANCED STATS CALCULATIONS
+# ============================================================================
+def calculate_sharpshooter(df):
+    """
+    Calculate accuracy stats for each user.
+    Formula: (Sum of all User's Scores / Sum of all User's Questions_Total) * 100
+    """
+    if df.empty:
+        return pd.DataFrame(columns=['Name', 'Accuracy', 'Total_Correct', 'Total_Questions', 'Games_Played'])
+    
+    # Ensure numeric types
+    df['Score'] = pd.to_numeric(df['Score'], errors='coerce').fillna(0)
+    df['Questions_Total'] = pd.to_numeric(df['Questions_Total'], errors='coerce').fillna(5)
+    
+    # Group by user
+    stats = df.groupby('Name').agg({
+        'Score': 'sum',
+        'Questions_Total': 'sum',
+        'Name': 'count'
+    }).rename(columns={'Name': 'Games_Played', 'Score': 'Total_Correct', 'Questions_Total': 'Total_Questions'})
+    
+    # Calculate accuracy
+    stats['Accuracy'] = (stats['Total_Correct'] / stats['Total_Questions'] * 100).round(1)
+    
+    # Sort by accuracy (desc), then by games played (desc) for tiebreaker
+    stats = stats.sort_values(by=['Accuracy', 'Games_Played'], ascending=[False, False])
+    
+    return stats.reset_index()
+
+
+def calculate_speed_demon(df):
+    """
+    Calculate average time stats for each user.
+    Lower average time = faster = better.
+    """
+    if df.empty:
+        return pd.DataFrame(columns=['Name', 'Avg_Time', 'Fastest_Time', 'Games_Played'])
+    
+    # Ensure numeric type
+    df['Time_Taken'] = pd.to_numeric(df['Time_Taken'], errors='coerce').fillna(60)
+    
+    # Group by user
+    stats = df.groupby('Name').agg({
+        'Time_Taken': ['mean', 'min', 'count']
+    })
+    
+    stats.columns = ['Avg_Time', 'Fastest_Time', 'Games_Played']
+    stats['Avg_Time'] = stats['Avg_Time'].round(1)
+    
+    # Sort by average time (asc) - faster is better
+    stats = stats.sort_values(by='Avg_Time', ascending=True)
+    
+    return stats.reset_index()
+
+
+def calculate_monthly_leaderboard(df):
+    """
+    Filter data to current month and calculate monthly stats.
+    """
+    if df.empty:
+        return pd.DataFrame(columns=['Name', 'Total_Score', 'Avg_Score', 'Games_Played'])
+    
+    # Parse dates
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    
+    # Filter to current month
+    now = datetime.now()
+    current_month = df[
+        (df['Date'].dt.year == now.year) & 
+        (df['Date'].dt.month == now.month)
+    ]
+    
+    if current_month.empty:
+        return pd.DataFrame(columns=['Name', 'Total_Score', 'Avg_Score', 'Games_Played'])
+    
+    # Ensure numeric
+    current_month['Score'] = pd.to_numeric(current_month['Score'], errors='coerce').fillna(0)
+    
+    # Group by user
+    stats = current_month.groupby('Name').agg({
+        'Score': ['sum', 'mean', 'count']
+    })
+    
+    stats.columns = ['Total_Score', 'Avg_Score', 'Games_Played']
+    stats['Avg_Score'] = stats['Avg_Score'].round(1)
+    stats['Total_Score'] = stats['Total_Score'].astype(int)
+    
+    # Sort by total score (desc)
+    stats = stats.sort_values(by='Total_Score', ascending=False)
+    
+    return stats.reset_index()
+
+
+def get_quiz_dates(df):
+    """
+    Get all unique dates when quizzes were played (globally).
+    These represent the available quiz dates.
+    """
+    if df.empty:
+        return []
+    
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    unique_dates = df['Date'].dropna().dt.date.unique()
+    return sorted(unique_dates, reverse=True)  # Most recent first
+
+
+def calculate_streak(df, user_name, quiz_dates):
+    """
+    Calculate a user's consecutive play streak.
+    
+    Logic:
+    1. Get the dates the user played
+    2. Check if they played on the most recent quiz date
+    3. Count backwards through consecutive quiz dates they played
+    """
+    if df.empty or not quiz_dates:
+        return 0
+    
+    # Get this user's play dates
+    user_df = df[df['Name'] == user_name].copy()
+    if user_df.empty:
+        return 0
+    
+    user_df['Date'] = pd.to_datetime(user_df['Date'], errors='coerce')
+    user_dates = set(user_df['Date'].dropna().dt.date.unique())
+    
+    if not user_dates:
+        return 0
+    
+    # Count consecutive quiz dates the user played, starting from most recent
+    streak = 0
+    for quiz_date in quiz_dates:
+        if quiz_date in user_dates:
+            streak += 1
+        else:
+            break  # Streak broken
+    
+    return streak
+
+
+def calculate_all_streaks(df):
+    """
+    Calculate streaks for all users.
+    """
+    if df.empty:
+        return pd.DataFrame(columns=['Name', 'Current_Streak', 'Last_Played'])
+    
+    quiz_dates = get_quiz_dates(df)
+    
+    if not quiz_dates:
+        return pd.DataFrame(columns=['Name', 'Current_Streak', 'Last_Played'])
+    
+    # Get unique users
+    users = df['Name'].unique()
+    
+    streaks = []
+    for user in users:
+        streak = calculate_streak(df, user, quiz_dates)
+        
+        # Get last played date
+        user_df = df[df['Name'] == user].copy()
+        user_df['Date'] = pd.to_datetime(user_df['Date'], errors='coerce')
+        last_played = user_df['Date'].max()
+        
+        streaks.append({
+            'Name': user,
+            'Current_Streak': streak,
+            'Last_Played': last_played.strftime('%Y-%m-%d') if pd.notna(last_played) else 'N/A'
+        })
+    
+    streak_df = pd.DataFrame(streaks)
+    streak_df = streak_df.sort_values(by='Current_Streak', ascending=False)
+    
+    return streak_df.reset_index(drop=True)
+
+
 # ============================================================================
 # TIMER COMPONENT
 # ============================================================================
 def display_timer():
     """Display and manage the countdown timer."""
     if st.session_state.start_time is None:
-        return 60
+        return TIMER_SECONDS
     
     elapsed = time.time() - st.session_state.start_time
-    remaining = max(0, 60 - int(elapsed))
+    remaining = max(0, TIMER_SECONDS - int(elapsed))
     
     # Style based on time remaining
     timer_class = "timer-container"
@@ -486,7 +777,7 @@ def display_timer():
 def show_welcome_screen():
     """Display the welcome/name entry screen."""
     st.markdown('<h1 class="main-title">Daily Trivia</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Test your knowledge in 60 seconds</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="subtitle">Test your knowledge in {TIMER_SECONDS} seconds</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -524,13 +815,19 @@ def show_welcome_screen():
     
     # Instructions
     st.markdown("---")
-    st.markdown("""
+    st.markdown(f"""
     **How to Play:**
-    - Answer 5 trivia questions
-    - You have 60 seconds to complete
+    - Answer {NUM_QUESTIONS} trivia questions
+    - You have {TIMER_SECONDS} seconds to complete
     - Your score and time will be recorded
     - Compete for the top of the leaderboard!
     """)
+    
+    # Hall of Fame link
+    st.markdown("---")
+    if st.button("🏆 View Hall of Fame", use_container_width=True):
+        st.session_state.show_hall_of_fame = True
+        st.rerun()
 
 
 def show_quiz_screen():
@@ -610,10 +907,10 @@ def show_quiz_screen():
 
 
 def submit_quiz():
-    """Calculate score and submit to leaderboard."""
+    """Calculate score and submit to leaderboard and global history."""
     # Calculate time taken
     time_taken = int(time.time() - st.session_state.start_time)
-    time_taken = min(time_taken, 60)  # Cap at 60 seconds
+    time_taken = min(time_taken, TIMER_SECONDS)  # Cap at timer limit
     st.session_state.time_taken = time_taken
     
     # Calculate score
@@ -629,14 +926,24 @@ def submit_quiz():
     
     st.session_state.score = score
     
-    # Save to leaderboard
+    # Save to both sheets
     conn, error = get_connection()
     if conn and not error:
+        # Save to weekly leaderboard
         append_to_leaderboard(
             conn,
             st.session_state.player_name,
             score,
             time_taken
+        )
+        
+        # Save to global history (permanent archive)
+        append_to_global_history(
+            conn,
+            st.session_state.player_name,
+            score,
+            time_taken,
+            st.session_state.questions_total
         )
     
     st.session_state.submitted = True
@@ -650,7 +957,7 @@ def show_results_screen():
     # Score display
     st.markdown(f"""
     <div class="score-display">
-        <div class="score-number">{st.session_state.score}/5</div>
+        <div class="score-number">{st.session_state.score}/{st.session_state.questions_total}</div>
         <div class="score-label">Correct Answers</div>
         <div class="score-label" style="margin-top: 1rem;">
             Completed in {st.session_state.time_taken} seconds
@@ -703,9 +1010,31 @@ def show_results_screen():
     
     st.markdown("---")
     
-    # Leaderboard
-    st.markdown("### 🏆 Leaderboard")
+    # Tabs for Leaderboard and Hall of Fame
+    tab1, tab2 = st.tabs(["🏅 Weekly Leaderboard", "🏆 Hall of Fame"])
     
+    with tab1:
+        show_weekly_leaderboard()
+    
+    with tab2:
+        show_hall_of_fame_content()
+    
+    st.markdown("---")
+    
+    # Play again button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("Play Again", use_container_width=True):
+            # Reset session state
+            for key in ['game_started', 'start_time', 'questions', 'answers', 
+                       'submitted', 'score', 'time_taken', 'connection_error']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
+
+
+def show_weekly_leaderboard():
+    """Display the weekly leaderboard."""
     conn, error = get_connection()
     if conn and not error:
         leaderboard = get_leaderboard(conn)
@@ -731,18 +1060,112 @@ def show_results_screen():
             st.info("No entries in the leaderboard yet. You're the first!")
     else:
         st.warning("Could not load leaderboard.")
+
+
+def show_hall_of_fame_content():
+    """Display the Hall of Fame with advanced stats."""
+    conn, error = get_connection()
+    
+    if error or not conn:
+        st.warning("Could not load stats. Please try again later.")
+        return
+    
+    # Get global history
+    history = get_global_history(conn)
+    
+    if history.empty:
+        st.info("No historical data yet. Play some games to see stats!")
+        return
+    
+    # Sub-tabs for different stats
+    stat_tab1, stat_tab2, stat_tab3, stat_tab4 = st.tabs([
+        "🎯 Sharpshooters", "⚡ Speed Demons", "📅 Monthly Leaders", "🔥 Streaks"
+    ])
+    
+    with stat_tab1:
+        st.markdown("#### 🎯 Sharpshooter Rankings")
+        st.markdown("*Highest accuracy across all games*")
+        
+        accuracy_df = calculate_sharpshooter(history)
+        
+        if not accuracy_df.empty:
+            display_df = accuracy_df.head(10).copy()
+            display_df.index = range(1, len(display_df) + 1)
+            display_df.index.name = 'Rank'
+            display_df = display_df[['Name', 'Accuracy', 'Total_Correct', 'Total_Questions', 'Games_Played']]
+            display_df.columns = ['Name', 'Accuracy %', 'Correct', 'Total Qs', 'Games']
+            
+            st.dataframe(display_df, use_container_width=True, hide_index=False)
+        else:
+            st.info("No data available yet.")
+    
+    with stat_tab2:
+        st.markdown("#### ⚡ Speed Demon Rankings")
+        st.markdown("*Fastest average completion time*")
+        
+        speed_df = calculate_speed_demon(history)
+        
+        if not speed_df.empty:
+            display_df = speed_df.head(10).copy()
+            display_df.index = range(1, len(display_df) + 1)
+            display_df.index.name = 'Rank'
+            display_df = display_df[['Name', 'Avg_Time', 'Fastest_Time', 'Games_Played']]
+            display_df.columns = ['Name', 'Avg Time (s)', 'Best Time (s)', 'Games']
+            
+            st.dataframe(display_df, use_container_width=True, hide_index=False)
+        else:
+            st.info("No data available yet.")
+    
+    with stat_tab3:
+        current_month = datetime.now().strftime('%B %Y')
+        st.markdown(f"#### 📅 Monthly Leaderboard")
+        st.markdown(f"*Top performers for {current_month}*")
+        
+        monthly_df = calculate_monthly_leaderboard(history)
+        
+        if not monthly_df.empty:
+            display_df = monthly_df.head(10).copy()
+            display_df.index = range(1, len(display_df) + 1)
+            display_df.index.name = 'Rank'
+            display_df = display_df[['Name', 'Total_Score', 'Avg_Score', 'Games_Played']]
+            display_df.columns = ['Name', 'Total Score', 'Avg Score', 'Games']
+            
+            st.dataframe(display_df, use_container_width=True, hide_index=False)
+        else:
+            st.info(f"No games played in {current_month} yet.")
+    
+    with stat_tab4:
+        st.markdown("#### 🔥 Streak Leaders")
+        st.markdown("*Most consecutive quiz participations (Mon & Fri)*")
+        
+        streak_df = calculate_all_streaks(history)
+        
+        if not streak_df.empty:
+            display_df = streak_df.head(10).copy()
+            display_df.index = range(1, len(display_df) + 1)
+            display_df.index.name = 'Rank'
+            display_df.columns = ['Name', 'Current Streak', 'Last Played']
+            
+            st.dataframe(display_df, use_container_width=True, hide_index=False)
+        else:
+            st.info("No streak data available yet.")
+
+
+def show_hall_of_fame_standalone():
+    """Display Hall of Fame as a standalone page."""
+    st.markdown('<h1 class="main-title">🏆 Hall of Fame</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Career Stats & All-Time Rankings</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Play again button
+    show_hall_of_fame_content()
+    
+    st.markdown("---")
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Play Again", use_container_width=True):
-            # Reset session state
-            for key in ['game_started', 'start_time', 'questions', 'answers', 
-                       'submitted', 'score', 'time_taken', 'connection_error']:
-                if key in st.session_state:
-                    del st.session_state[key]
+        if st.button("← Back to Quiz", use_container_width=True):
+            st.session_state.show_hall_of_fame = False
             st.rerun()
 
 
@@ -753,7 +1176,10 @@ def main():
     """Main application entry point."""
     init_session_state()
     
-    if not st.session_state.game_started:
+    # Check if showing Hall of Fame standalone
+    if st.session_state.get('show_hall_of_fame', False):
+        show_hall_of_fame_standalone()
+    elif not st.session_state.game_started:
         show_welcome_screen()
     elif st.session_state.submitted:
         show_results_screen()
