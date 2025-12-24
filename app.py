@@ -27,20 +27,27 @@ st.markdown("""
     /* Import Helvetica-like font */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
+    /* ========== FORCE LIGHT THEME ========== */
+    /* Override any dark mode settings */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+    
+    /* Force all text to be dark */
+    .stApp p, .stApp span, .stApp div, .stApp label {
+        color: #000000 !important;
+    }
+    
     /* Global styles */
     html, body, [class*="css"] {
         font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     
-    .stApp {
-        background-color: #ffffff;
-        color: #000000;
-    }
-    
     /* Headers */
-    h1, h2, h3 {
+    h1, h2, h3, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
         font-weight: 600;
-        color: #000000;
+        color: #000000 !important;
         letter-spacing: -0.02em;
     }
     
@@ -50,20 +57,20 @@ st.markdown("""
         font-weight: 700;
         text-align: center;
         margin-bottom: 0.5rem;
-        color: #000000;
+        color: #000000 !important;
     }
     
     .subtitle {
         font-size: 1rem;
         text-align: center;
-        color: #666666;
+        color: #666666 !important;
         margin-bottom: 2rem;
     }
     
     /* Timer display */
     .timer-container {
-        background-color: #000000;
-        color: #ffffff;
+        background-color: #000000 !important;
+        color: #ffffff !important;
         padding: 1rem 2rem;
         border-radius: 8px;
         text-align: center;
@@ -74,7 +81,7 @@ st.markdown("""
     }
     
     .timer-warning {
-        background-color: #333333;
+        background-color: #333333 !important;
         animation: pulse 1s infinite;
     }
     
@@ -85,7 +92,7 @@ st.markdown("""
     
     /* Question cards */
     .question-card {
-        background-color: #f8f8f8;
+        background-color: #f8f8f8 !important;
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 1.5rem;
@@ -95,7 +102,7 @@ st.markdown("""
     .question-number {
         font-size: 0.875rem;
         font-weight: 600;
-        color: #666666;
+        color: #666666 !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 0.5rem;
@@ -104,14 +111,14 @@ st.markdown("""
     .question-text {
         font-size: 1.125rem;
         font-weight: 500;
-        color: #000000;
+        color: #000000 !important;
         margin-bottom: 1rem;
     }
     
     /* Buttons */
     .stButton > button {
-        background-color: #000000;
-        color: #ffffff;
+        background-color: #000000 !important;
+        color: #ffffff !important;
         border: none;
         border-radius: 6px;
         padding: 0.75rem 2rem;
@@ -122,41 +129,65 @@ st.markdown("""
     }
     
     .stButton > button:hover {
-        background-color: #333333;
-        color: #ffffff;
+        background-color: #333333 !important;
+        color: #ffffff !important;
     }
     
     /* Input fields */
     .stTextInput > div > div > input {
-        border: 2px solid #000000;
+        border: 2px solid #000000 !important;
         border-radius: 6px;
         padding: 0.75rem;
         font-size: 1rem;
+        background-color: #ffffff !important;
+        color: #000000 !important;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #000000;
+        border-color: #000000 !important;
         box-shadow: 0 0 0 1px #000000;
     }
     
-    /* Radio buttons */
+    /* ========== RADIO BUTTONS - CRITICAL FIX ========== */
     .stRadio > div {
-        background-color: transparent;
+        background-color: transparent !important;
     }
     
-    .stRadio > div > label {
-        background-color: #f8f8f8;
-        border: 1px solid #e0e0e0;
+    /* Radio button labels/options */
+    .stRadio label, 
+    .stRadio [data-testid="stMarkdownContainer"] p,
+    .stRadio span,
+    [data-testid="stRadio"] label,
+    [data-testid="stRadio"] p,
+    [data-testid="stRadio"] span {
+        color: #000000 !important;
+        background-color: transparent !important;
+    }
+    
+    /* Radio option containers */
+    .stRadio > div > label,
+    [data-testid="stRadio"] > div > label {
+        background-color: #f8f8f8 !important;
+        border: 1px solid #e0e0e0 !important;
         border-radius: 6px;
         padding: 0.75rem 1rem;
         margin: 0.25rem 0;
         cursor: pointer;
         transition: all 0.2s ease;
+        color: #000000 !important;
     }
     
-    .stRadio > div > label:hover {
-        background-color: #f0f0f0;
-        border-color: #000000;
+    .stRadio > div > label:hover,
+    [data-testid="stRadio"] > div > label:hover {
+        background-color: #e8e8e8 !important;
+        border-color: #000000 !important;
+    }
+    
+    /* Selected radio option */
+    .stRadio > div > label[data-checked="true"],
+    [data-testid="stRadio"] > div > label[data-checked="true"] {
+        background-color: #e0e0e0 !important;
+        border-color: #000000 !important;
     }
     
     /* Leaderboard table */
@@ -164,36 +195,63 @@ st.markdown("""
         margin-top: 2rem;
     }
     
+    /* Dataframe/Table styling */
+    .stDataFrame, [data-testid="stDataFrame"] {
+        background-color: #ffffff !important;
+    }
+    
+    .stDataFrame th, .stDataFrame td,
+    [data-testid="stDataFrame"] th, 
+    [data-testid="stDataFrame"] td {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    
     /* Score display */
     .score-display {
-        background-color: #000000;
-        color: #ffffff;
+        background-color: #000000 !important;
+        color: #ffffff !important;
         padding: 2rem;
         border-radius: 8px;
         text-align: center;
         margin: 2rem 0;
     }
     
+    .score-display * {
+        color: #ffffff !important;
+    }
+    
     .score-number {
         font-size: 4rem;
         font-weight: 700;
         line-height: 1;
+        color: #ffffff !important;
     }
     
     .score-label {
         font-size: 1rem;
-        color: #cccccc;
+        color: #cccccc !important;
         margin-top: 0.5rem;
     }
     
     /* Error messages */
     .error-box {
-        background-color: #f8f8f8;
+        background-color: #f8f8f8 !important;
         border: 1px solid #cccccc;
         border-radius: 8px;
         padding: 1.5rem;
         text-align: center;
-        color: #333333;
+        color: #333333 !important;
+    }
+    
+    /* Warning/Info boxes */
+    .stAlert, [data-testid="stAlert"] {
+        background-color: #f8f8f8 !important;
+        color: #000000 !important;
+    }
+    
+    .stAlert p, [data-testid="stAlert"] p {
+        color: #000000 !important;
     }
     
     /* Hide Streamlit branding */
