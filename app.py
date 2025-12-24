@@ -5,6 +5,7 @@ Features: Global History, Advanced Stats, Streak Tracking, Hall of Fame
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from datetime import datetime, timedelta
 import time
@@ -848,14 +849,14 @@ def show_welcome_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("**Enter your name:** Use the same unique nickname every week to track your score")
+        st.markdown("**Enter your name to begin.** Write the same UNIQUE name every week so your score gets tracked.")
         name = st.text_input(
             "Your name",
             placeholder="Your name...",
             key="name_input",
             label_visibility="collapsed"
         )
-        st.caption("Only play once per quiz please!")
+        st.caption("⚠️ Only play once per quiz please!")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -1019,12 +1020,35 @@ def submit_quiz():
 
 def show_results_screen():
     """Display the results and leaderboard."""
-    # Force scroll to top of page
-    st.markdown("""
+    # Force scroll to top using components.html for reliable JavaScript execution
+    components.html("""
         <script>
-            window.parent.document.querySelector('section.main').scrollTo(0, 0);
+            // Scroll the parent Streamlit container to top
+            const scrollToTop = () => {
+                // Try multiple selectors for Streamlit's containers
+                const containers = [
+                    window.parent.document.querySelector('section.main'),
+                    window.parent.document.querySelector('[data-testid="stAppViewContainer"]'),
+                    window.parent.document.querySelector('.main'),
+                    window.parent.document.body
+                ];
+                
+                containers.forEach(container => {
+                    if (container) {
+                        container.scrollTop = 0;
+                    }
+                });
+                
+                // Also try window scroll
+                window.parent.scrollTo(0, 0);
+            };
+            
+            // Execute immediately and after a short delay
+            scrollToTop();
+            setTimeout(scrollToTop, 100);
+            setTimeout(scrollToTop, 300);
         </script>
-    """, unsafe_allow_html=True)
+    """, height=0)
     
     st.markdown('<h1 class="main-title">Quiz Complete!</h1>', unsafe_allow_html=True)
     
@@ -1100,15 +1124,35 @@ def show_results_screen():
     st.markdown("### 📤 Share the Fun!")
     st.markdown("Challenge your friends to beat your score!")
     
+    quiz_url = "https://daily-trivia-candbtjrukyyht8qqfmmmr.streamlit.app/"
+    
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # Get the current app URL for sharing
-        share_text = f"I just scored {st.session_state.score}/{st.session_state.questions_total} on Btown Brief Trivia! Can you beat me? 🧠"
+        # Copy link button styled with white text
+        st.markdown(f"""
+        <div style="text-align: center;">
+            <button onclick="navigator.clipboard.writeText('{quiz_url}').then(function() {{
+                document.getElementById('copy-confirm').style.display = 'block';
+                setTimeout(function() {{
+                    document.getElementById('copy-confirm').style.display = 'none';
+                }}, 2000);
+            }})" style="
+                background-color: #000000;
+                color: #ffffff;
+                border: none;
+                border-radius: 6px;
+                padding: 0.75rem 2rem;
+                font-weight: 500;
+                font-size: 1rem;
+                cursor: pointer;
+                width: 100%;
+            ">🔗 Copy Link to Send to Friends</button>
+            <p id="copy-confirm" style="display: none; color: #28a745; margin-top: 0.5rem;">✓ Link copied!</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Create share links
-        twitter_url = f"https://twitter.com/intent/tweet?text={share_text}"
-        
-        st.link_button("🔗 Share on Twitter/X", twitter_url, use_container_width=True)
+        # Also show the link as text for manual copying
+        st.code(quiz_url, language=None)
     
     st.markdown("---")
     
