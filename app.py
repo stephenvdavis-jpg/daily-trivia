@@ -34,7 +34,7 @@ st.markdown("""
         color: #000000 !important;
     }
     
-    /* Force all text to be dark - EXCEPT inside buttons */
+    /* Force all text to be dark - EXCEPT inside buttons and score-display */
     .stApp p, .stApp div, .stApp label {
         color: #000000 !important;
     }
@@ -47,6 +47,21 @@ st.markdown("""
     .stButton button span,
     .stButton button div {
         color: #ffffff !important;
+    }
+    
+    /* Exclude score-display from dark text rule */
+    .stApp .score-display,
+    .stApp .score-display *,
+    .stApp .score-display p,
+    .stApp .score-display div,
+    .stApp .score-display span,
+    .stApp .score-number,
+    .stApp .score-label {
+        color: #ffffff !important;
+    }
+    
+    .stApp .score-label {
+        color: #cccccc !important;
     }
     
     /* Global styles */
@@ -236,8 +251,9 @@ st.markdown("""
         background-color: #ffffff !important;
     }
     
-    /* Score display */
-    .score-display {
+    /* ========== SCORE DISPLAY - FORCE WHITE TEXT ========== */
+    .score-display,
+    div.score-display {
         background-color: #000000 !important;
         color: #ffffff !important;
         padding: 2rem;
@@ -246,18 +262,27 @@ st.markdown("""
         margin: 2rem 0;
     }
     
-    .score-display * {
+    .score-display *,
+    .score-display div,
+    .score-display p,
+    .score-display span,
+    div.score-display *,
+    div.score-display div,
+    div.score-display p,
+    div.score-display span {
         color: #ffffff !important;
     }
     
-    .score-number {
+    .score-number,
+    .score-display .score-number {
         font-size: 4rem;
         font-weight: 700;
         line-height: 1;
         color: #ffffff !important;
     }
     
-    .score-label {
+    .score-label,
+    .score-display .score-label {
         font-size: 1rem;
         color: #cccccc !important;
         margin-top: 0.5rem;
@@ -616,18 +641,42 @@ def show_results_screen():
     
     if questions is not None:
         for idx, row in questions.iterrows():
-            correct = str(row['Correct_Answer']).strip().upper()
-            given = st.session_state.answers.get(idx, 'No answer').strip().upper()
+            correct_letter = str(row['Correct_Answer']).strip().upper()
+            given_letter = st.session_state.answers.get(idx, '').strip().upper()
             
-            is_correct = given == correct
+            # Map letters to actual answer text
+            answer_map = {
+                'A': str(row['Option_A']),
+                'B': str(row['Option_B']),
+                'C': str(row['Option_C']),
+                'D': str(row['Option_D'])
+            }
+            
+            # Get the actual answer text
+            given_text = answer_map.get(given_letter, 'No answer')
+            correct_text = answer_map.get(correct_letter, '')
+            
+            is_correct = given_letter == correct_letter
             icon = "✓" if is_correct else "✗"
-            color = "#28a745" if is_correct else "#dc3545"
             
-            st.markdown(f"""
-            **Q{idx + 1}: {row['Question']}**  
-            Your answer: **{given}** {icon}  
-            {'Correct answer: **' + correct + '**' if not is_correct else ''}
-            """)
+            if is_correct:
+                st.markdown(f"""
+                **Q{idx + 1}: {row['Question']}**  
+                Your answer: **{given_text}** {icon}
+                """)
+            else:
+                if given_letter:
+                    st.markdown(f"""
+                    **Q{idx + 1}: {row['Question']}**  
+                    Your answer: **{given_text}** {icon}  
+                    Correct answer: **{correct_text}**
+                    """)
+                else:
+                    st.markdown(f"""
+                    **Q{idx + 1}: {row['Question']}**  
+                    Your answer: **No answer** {icon}  
+                    Correct answer: **{correct_text}**
+                    """)
     
     st.markdown("---")
     
