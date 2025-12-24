@@ -849,14 +849,14 @@ def show_welcome_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("**Enter your name:** Use the same unique name every week to track your score.")
+        st.markdown("**Enter your name to begin.** Write the same UNIQUE name every week so your score gets tracked.")
         name = st.text_input(
             "Your name",
             placeholder="Your name...",
             key="name_input",
             label_visibility="collapsed"
         )
-        st.caption("Only play once per quiz please!")
+        st.caption("⚠️ Only play once per quiz please!")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -1020,35 +1020,15 @@ def submit_quiz():
 
 def show_results_screen():
     """Display the results and leaderboard."""
-    # Force scroll to top using components.html for reliable JavaScript execution
+    # Force scroll to top using JavaScript in an iframe
     components.html("""
         <script>
-            // Scroll the parent Streamlit container to top
-            const scrollToTop = () => {
-                // Try multiple selectors for Streamlit's containers
-                const containers = [
-                    window.parent.document.querySelector('section.main'),
-                    window.parent.document.querySelector('[data-testid="stAppViewContainer"]'),
-                    window.parent.document.querySelector('.main'),
-                    window.parent.document.body
-                ];
-                
-                containers.forEach(container => {
-                    if (container) {
-                        container.scrollTop = 0;
-                    }
-                });
-                
-                // Also try window scroll
-                window.parent.scrollTo(0, 0);
-            };
-            
-            // Execute immediately and after a short delay
-            scrollToTop();
-            setTimeout(scrollToTop, 100);
-            setTimeout(scrollToTop, 300);
+            // Scroll parent window to top
+            window.parent.document.querySelector('[data-testid="stAppViewContainer"]').scrollTo(0, 0);
+            window.parent.document.querySelector('section.main').scrollTo(0, 0);
+            window.parent.scrollTo(0, 0);
         </script>
-    """, height=0)
+    """, height=0, scrolling=False)
     
     st.markdown('<h1 class="main-title">Quiz Complete!</h1>', unsafe_allow_html=True)
     
@@ -1128,31 +1108,51 @@ def show_results_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # Copy link button styled with white text
-        st.markdown(f"""
-        <div style="text-align: center;">
-            <button onclick="navigator.clipboard.writeText('{quiz_url}').then(function() {{
-                document.getElementById('copy-confirm').style.display = 'block';
-                setTimeout(function() {{
-                    document.getElementById('copy-confirm').style.display = 'none';
-                }}, 2000);
-            }})" style="
-                background-color: #000000;
-                color: #ffffff;
-                border: none;
-                border-radius: 6px;
-                padding: 0.75rem 2rem;
-                font-weight: 500;
-                font-size: 1rem;
-                cursor: pointer;
-                width: 100%;
-            ">🔗 Copy Link to Send to Friends</button>
-            <p id="copy-confirm" style="display: none; color: #28a745; margin-top: 0.5rem;">✓ Link copied!</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Also show the link as text for manual copying
-        st.code(quiz_url, language=None)
+        # Copy link button using components.html for working JavaScript
+        components.html(f"""
+            <div style="text-align: center; font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                <button id="copyBtn" onclick="copyToClipboard()" style="
+                    background-color: #000000;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 0.75rem 2rem;
+                    font-weight: 500;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    width: 100%;
+                    font-family: inherit;
+                ">🔗 Copy Link to Send to Friends</button>
+                <p id="copy-confirm" style="display: none; color: #28a745; margin-top: 0.5rem; font-size: 0.9rem;">✓ Link copied to clipboard!</p>
+            </div>
+            <script>
+                function copyToClipboard() {{
+                    const url = "{quiz_url}";
+                    navigator.clipboard.writeText(url).then(function() {{
+                        document.getElementById('copy-confirm').style.display = 'block';
+                        document.getElementById('copyBtn').innerText = '✓ Copied!';
+                        setTimeout(function() {{
+                            document.getElementById('copy-confirm').style.display = 'none';
+                            document.getElementById('copyBtn').innerText = '🔗 Copy Link to Send to Friends';
+                        }}, 2500);
+                    }}).catch(function() {{
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        document.getElementById('copy-confirm').style.display = 'block';
+                        document.getElementById('copyBtn').innerText = '✓ Copied!';
+                        setTimeout(function() {{
+                            document.getElementById('copy-confirm').style.display = 'none';
+                            document.getElementById('copyBtn').innerText = '🔗 Copy Link to Send to Friends';
+                        }}, 2500);
+                    }});
+                }}
+            </script>
+        """, height=100)
     
     st.markdown("---")
     
