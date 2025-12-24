@@ -849,14 +849,14 @@ def show_welcome_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("**Enter your name to begin.** Write the same UNIQUE name every week so your score gets tracked.")
+        st.markdown("**Enter your name:** Use the same unique name every week to track your score.")
         name = st.text_input(
             "Your name",
             placeholder="Your name...",
             key="name_input",
             label_visibility="collapsed"
         )
-        st.caption("⚠️ Only play once per quiz please!")
+        st.caption("Only play once per quiz please!")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
