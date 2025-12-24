@@ -848,7 +848,7 @@ def show_welcome_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("**Enter your name:** Use the same unique name every week to track your score")
+        st.markdown("**Enter your name:** Use the same unique nickname every week to track your score")
         name = st.text_input(
             "Your name",
             placeholder="Your name...",
