@@ -849,14 +849,14 @@ def show_welcome_screen():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("**Enter your name:** Use the same unique name every week to track your score.")
+        st.markdown("**Enter your name to begin.** Write the same UNIQUE name every week so your score gets tracked.")
         name = st.text_input(
             "Your name",
             placeholder="Your name...",
             key="name_input",
             label_visibility="collapsed"
         )
-        st.caption("Only play once per quiz please!")
+        st.caption("⚠️ Only play once per quiz please!")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
@@ -1097,6 +1097,28 @@ def show_results_screen():
     # Hall of Fame / Career Stats (shown below)
     st.markdown("### 🏆 Hall of Fame — Career Stats")
     show_hall_of_fame_content()
+    
+    st.markdown("---")
+    
+    # Big visual reminder to scroll up
+    st.markdown("""
+    <div style="
+        background-color: #000000;
+        color: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        margin: 2rem 0;
+        border: 4px solid #000000;
+    ">
+        <p style="font-size: 2.5rem; font-weight: 800; margin: 0; color: #ffffff !important;">
+            ☝️ SCROLL UP TO SEE YOUR SCORE! ☝️
+        </p>
+        <p style="font-size: 1.1rem; margin-top: 0.75rem; color: #cccccc !important;">
+            Your results and correct answers are at the top of this page
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     
