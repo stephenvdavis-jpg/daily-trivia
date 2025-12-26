@@ -953,10 +953,11 @@ def show_quiz_screen():
             f"Select answer for Q{idx + 1}",
             options=options,
             key=f"q_{idx}",
+            index=None,  # No default selection
             label_visibility="collapsed"
         )
         
-        # Store the answer letter (A, B, C, or D)
+        # Store the answer letter (A, B, C, or D) only if user selected something
         if answer:
             st.session_state.answers[idx] = answer[0]  # Get just the letter
         
@@ -1101,24 +1102,24 @@ def show_results_screen():
     st.markdown("---")
     
     # Big visual reminder to scroll up
-    st.markdown("""
+    components.html("""
     <div style="
         background-color: #000000;
         color: #ffffff;
-        padding: 2rem;
+        padding: 1.5rem;
         border-radius: 12px;
         text-align: center;
-        margin: 2rem 0;
-        border: 4px solid #000000;
+        margin: 1rem 0;
+        font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     ">
-        <p style="font-size: 2.5rem; font-weight: 800; margin: 0; color: #ffffff !important;">
+        <p style="font-size: 1.8rem; font-weight: 800; margin: 0; color: #ffffff;">
             ☝️ SCROLL UP TO SEE YOUR SCORE! ☝️
         </p>
-        <p style="font-size: 1.1rem; margin-top: 0.75rem; color: #cccccc !important;">
+        <p style="font-size: 1rem; margin-top: 0.5rem; color: #cccccc;">
             Your results and correct answers are at the top of this page
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """, height=130)
     
     st.markdown("---")
     
