@@ -926,7 +926,7 @@ def show_welcome_screen():
             key="name_input",
             label_visibility="collapsed"
         )
-        st.caption("⚠️ Only play once per quiz please!")
+        st.caption("⚠️ **Only play once per quiz please!**")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
