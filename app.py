@@ -33,7 +33,7 @@ st.set_page_config(
 # ============================================================================
 # NOTE: Upload background.jpeg to your GitHub repo and update this URL
 # Example: https://raw.githubusercontent.com/stephenvdavis-jpg/daily-trivia/main/background.jpeg
-BACKGROUND_IMAGE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/daily-trivia/main/background.jpeg"
+BACKGROUND_IMAGE_URL = "https://raw.github.com/stephenvdavis-jpg/daily-trivia/blob/main/background.jpeg"
 
 st.markdown("""
 <style>
