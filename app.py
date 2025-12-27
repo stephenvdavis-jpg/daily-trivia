@@ -385,7 +385,7 @@ st.markdown(f"""
     
     /* ========== CLEAN CENTERED CARD ========== */
     .block-container {{
-        background-color: rgba(255, 255, 255, 0.6) !important;
+        background-color: rgba(255, 255, 255, 0.88) !important;
         border-radius: 20px;
         padding: 2rem !important;
         margin: 2rem auto;
@@ -690,18 +690,24 @@ def calculate_speed_demon(df):
     Lower average time = faster = better.
     """
     if df.empty:
-        return pd.DataFrame(columns=['Name', 'Avg_Time', 'Fastest_Time', 'Games_Played'])
+        return pd.DataFrame(columns=['Name', 'Avg_Time', 'Avg_Score', 'Fastest_Time', 'Games_Played'])
     
-    # Ensure numeric type
+    # Ensure numeric types
     df['Time_Taken'] = pd.to_numeric(df['Time_Taken'], errors='coerce').fillna(60)
+    df['Score'] = pd.to_numeric(df['Score'], errors='coerce').fillna(0)
     
     # Group by user
     stats = df.groupby('Name').agg({
-        'Time_Taken': ['mean', 'min', 'count']
+        'Time_Taken': ['mean', 'min', 'count'],
+        'Score': 'mean'
     })
     
-    stats.columns = ['Avg_Time', 'Fastest_Time', 'Games_Played']
+    stats.columns = ['Avg_Time', 'Fastest_Time', 'Games_Played', 'Avg_Score']
     stats['Avg_Time'] = stats['Avg_Time'].round(1)
+    stats['Avg_Score'] = stats['Avg_Score'].round(1)
+    
+    # Reorder columns: Avg_Time, Avg_Score, Fastest_Time, Games_Played
+    stats = stats[['Avg_Time', 'Avg_Score', 'Fastest_Time', 'Games_Played']]
     
     # Sort by average time (asc) - faster is better
     stats = stats.sort_values(by='Avg_Time', ascending=True)
@@ -1372,8 +1378,8 @@ def show_hall_of_fame_content():
             display_df = speed_df.head(10).copy()
             display_df.index = range(1, len(display_df) + 1)
             display_df.index.name = 'Rank'
-            display_df = display_df[['Name', 'Avg_Time', 'Fastest_Time', 'Games_Played']]
-            display_df.columns = ['Name', 'Avg Time (s)', 'Best Time (s)', 'Games']
+            display_df = display_df[['Name', 'Avg_Time', 'Avg_Score', 'Games_Played']]
+            display_df.columns = ['Name', 'Avg Time (s)', 'Avg Score', 'Games']
             
             st.dataframe(display_df, use_container_width=True, hide_index=False)
         else:
