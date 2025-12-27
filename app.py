@@ -59,6 +59,7 @@ st.markdown("""
         text-align: center;
         margin-bottom: 0.5rem;
         color: #000000 !important;
+        background: transparent !important;
     }
     
     .subtitle {
@@ -66,6 +67,7 @@ st.markdown("""
         text-align: center;
         color: #666666 !important;
         margin-bottom: 2rem;
+        background: transparent !important;
     }
     
     /* ========== TIMER DISPLAY - FORCE WHITE TEXT ========== */
@@ -385,44 +387,76 @@ st.markdown(f"""
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     }}
     
-    /* Remove any extra backgrounds on child elements */
-    .element-container {{
+    /* ========== REMOVE ALL NESTED BACKGROUNDS ========== */
+    .block-container .element-container,
+    .block-container .stMarkdown,
+    .block-container [data-testid="stMarkdownContainer"],
+    .block-container .stTextInput,
+    .block-container .stButton,
+    .block-container .stAlert,
+    .block-container [data-testid="stAlert"],
+    .block-container .stExpander,
+    .block-container [data-testid="stExpander"] {{
         background-color: transparent !important;
+        box-shadow: none !important;
     }}
     
-    /* Force text to be dark */
-    .stApp p, .stApp div, .stApp label {{
+    /* ========== CENTER THE HEADER ========== */
+    .main-title {{
+        text-align: center !important;
+        display: block !important;
+        width: 100% !important;
+        background: transparent !important;
+    }}
+    
+    .subtitle {{
+        text-align: center !important;
+        display: block !important;
+        width: 100% !important;
+        background: transparent !important;
+    }}
+    
+    /* ========== FIX TEXT COLORS ========== */
+    /* All text should be dark/black */
+    .block-container p,
+    .block-container label,
+    .block-container span,
+    .block-container div,
+    .stTextInput label,
+    [data-testid="stWidgetLabel"] {{
         color: #000000 !important;
     }}
     
-    /* Exclude button text */
-    .stApp .stButton p, 
-    .stApp .stButton span, 
-    .stApp .stButton div,
+    /* Exclude button text - keep white */
+    .stButton button,
+    .stButton button *,
     .stButton button p,
-    .stButton button span,
-    .stButton button div {{
+    .stButton button span {{
         color: #ffffff !important;
     }}
     
-    /* Exclude score-display */
-    .stApp .score-display,
-    .stApp .score-display *,
-    .stApp .score-number,
-    .stApp .score-label {{
+    /* Exclude score-display - keep white */
+    .score-display,
+    .score-display * {{
         color: #ffffff !important;
     }}
     
-    .stApp .score-label {{
+    .score-label {{
         color: #cccccc !important;
     }}
     
-    /* Exclude timer-container */
-    .stApp .timer-container,
-    .stApp .timer-container *,
-    .stApp .timer-warning,
-    .stApp .timer-warning * {{
+    /* Exclude timer-container - keep white */
+    .timer-container,
+    .timer-container *,
+    .timer-warning,
+    .timer-warning * {{
         color: #ffffff !important;
+    }}
+    
+    /* ========== ALERT/WARNING BOX - transparent ========== */
+    .stAlert, [data-testid="stAlert"] {{
+        background-color: rgba(255, 200, 100, 0.3) !important;
+        border: 1px solid rgba(200, 150, 50, 0.5) !important;
     }}
 </style>
 """, unsafe_allow_html=True)
