@@ -980,7 +980,7 @@ def show_quiz_screen():
     # Submit button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Submit Answers — Wait 5 secs", use_container_width=True):
+        if st.button("Submit Answers —> (then wait 5s)", use_container_width=True):
             submit_quiz()
     
     # Auto-refresh for timer (every second)
