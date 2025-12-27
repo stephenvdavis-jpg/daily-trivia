@@ -1,4 +1,4 @@
-"""
+ """
 Daily Trivia App
 A minimalist trivia application with Google Sheets integration.
 Features: Global History, Advanced Stats, Streak Tracking, Hall of Fame
@@ -385,7 +385,7 @@ st.markdown(f"""
     
     /* ========== CLEAN CENTERED CARD ========== */
     .block-container {{
-        background-color: rgba(255, 255, 255, 0.6) !important;
+        background-color: rgba(255, 255, 255, 0.88) !important;
         border-radius: 20px;
         padding: 2rem !important;
         margin: 2rem auto;
@@ -458,6 +458,21 @@ st.markdown(f"""
     }}
     
     /* Exclude timer-container - keep white */
+    .block-container .timer-container,
+    .block-container .timer-container *,
+    .block-container .timer-container p,
+    .block-container .timer-container span,
+    .block-container .timer-container div,
+    .block-container .timer-warning,
+    .block-container .timer-warning *,
+    .block-container div.timer-container,
+    .block-container div.timer-container *,
+    .timer-container,
+    .timer-container *,
+    .timer-warning,
+    .timer-warning * {{
+        color: #ffffff !important;
+    }}
     .timer-container,
     .timer-container *,
     .timer-warning,
@@ -926,7 +941,7 @@ def show_welcome_screen():
             key="name_input",
             label_visibility="collapsed"
         )
-        st.caption("⚠️ **Only play once per quiz please!**")
+        st.caption("⚠️ Only play once per quiz please!")
         
         st.markdown("<br>", unsafe_allow_html=True)
         
