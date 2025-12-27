@@ -458,6 +458,15 @@ st.markdown(f"""
         background-color: rgba(255, 200, 100, 0.3) !important;
         border: 1px solid rgba(200, 150, 50, 0.5) !important;
     }}
+    div[data-baseweb="input"] input {
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+}
+
+.stCaption {
+    font-weight: bold !important;
+    color: black;
+}
 </style>
 """, unsafe_allow_html=True)
 
