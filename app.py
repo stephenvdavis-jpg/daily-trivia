@@ -29,60 +29,16 @@ st.set_page_config(
 )
 
 # ============================================================================
-# CUSTOM CSS - Minimalist Black & White with Helvetica
+# CUSTOM CSS - With Background Image
 # ============================================================================
+# NOTE: Upload background.jpeg to your GitHub repo and update this URL
+# Example: https://raw.githubusercontent.com/stephenvdavis-jpg/daily-trivia/main/background.jpeg
+BACKGROUND_IMAGE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/daily-trivia/main/background.jpeg"
+
 st.markdown("""
 <style>
     /* Import Helvetica-like font */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
-    /* ========== FORCE LIGHT THEME ========== */
-    /* Override any dark mode settings */
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-    }
-    
-    /* Force all text to be dark - EXCEPT inside buttons and score-display */
-    .stApp p, .stApp div, .stApp label {
-        color: #000000 !important;
-    }
-    
-    /* Exclude button text from the dark text rule */
-    .stApp .stButton p, 
-    .stApp .stButton span, 
-    .stApp .stButton div,
-    .stButton button p,
-    .stButton button span,
-    .stButton button div {
-        color: #ffffff !important;
-    }
-    
-    /* Exclude score-display from dark text rule */
-    .stApp .score-display,
-    .stApp .score-display *,
-    .stApp .score-display p,
-    .stApp .score-display div,
-    .stApp .score-display span,
-    .stApp .score-number,
-    .stApp .score-label {
-        color: #ffffff !important;
-    }
-    
-    .stApp .score-label {
-        color: #cccccc !important;
-    }
-    
-    /* Exclude timer-container from dark text rule */
-    .stApp .timer-container,
-    .stApp .timer-container *,
-    .stApp .timer-container p,
-    .stApp .timer-container div,
-    .stApp .timer-container span,
-    .stApp .timer-warning,
-    .stApp .timer-warning * {
-        color: #ffffff !important;
-    }
     
     /* Global styles */
     html, body, [class*="css"] {
@@ -400,6 +356,71 @@ st.markdown("""
         color: #000000 !important;
         border-bottom-color: #000000 !important;
     }
+</style>
+""", unsafe_allow_html=True)
+
+# Apply background image with f-string
+st.markdown(f"""
+<style>
+    /* ========== BACKGROUND IMAGE ========== */
+    .stApp, [data-testid="stAppViewContainer"] {{
+        background-image: url('{BACKGROUND_IMAGE_URL}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+    
+    [data-testid="stHeader"] {{
+        background-color: transparent !important;
+    }}
+    
+    /* ========== CONTENT CARD WITH READABLE BACKGROUND ========== */
+    .block-container {{
+        background-color: rgba(255, 255, 255, 0.93) !important;
+        border-radius: 16px;
+        padding: 2rem !important;
+        margin: 1rem auto;
+        max-width: 800px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }}
+    
+    /* Force text to be dark on the white overlay */
+    .stApp p, .stApp div, .stApp label {{
+        color: #000000 !important;
+    }}
+    
+    /* Exclude button text */
+    .stApp .stButton p, 
+    .stApp .stButton span, 
+    .stApp .stButton div,
+    .stButton button p,
+    .stButton button span,
+    .stButton button div {{
+        color: #ffffff !important;
+    }}
+    
+    /* Exclude score-display */
+    .stApp .score-display,
+    .stApp .score-display *,
+    .stApp .score-number,
+    .stApp .score-label {{
+        color: #ffffff !important;
+    }}
+    
+    .stApp .score-label {{
+        color: #cccccc !important;
+    }}
+    
+    /* Exclude timer-container */
+    .stApp .timer-container,
+    .stApp .timer-container *,
+    .stApp .timer-warning,
+    .stApp .timer-warning * {{
+        color: #ffffff !important;
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -980,7 +1001,7 @@ def show_quiz_screen():
     # Submit button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Submit Answers —> (then wait 5s)", use_container_width=True):
+        if st.button("Submit Answers — Wait 5 secs", use_container_width=True):
             submit_quiz()
     
     # Auto-refresh for timer (every second)
