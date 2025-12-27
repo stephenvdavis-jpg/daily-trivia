@@ -32,7 +32,7 @@ st.set_page_config(
 # CUSTOM CSS - With Background Image
 # ============================================================================
 # NOTE: Upload background.jpeg to your GitHub repo and update this URL
-# Example: https://raw.githubusercontent.com/stephenvdavis-jpg/daily-trivia/main/background.jpeg
+# Example: https://raw.githubusercontent.com/YOUR_USERNAME/daily-trivia/main/background.jpeg
 BACKGROUND_IMAGE_URL = "https://raw.githubusercontent.com/stephenvdavis-jpg/daily-trivia/main/background.jpeg"
 
 st.markdown("""
@@ -375,16 +375,59 @@ st.markdown(f"""
         background-color: transparent !important;
     }}
     
-    /* ========== CONTENT CARD WITH READABLE BACKGROUND ========== */
+    /* ========== NO FULL-PAGE CARD - TRANSPARENT CONTAINER ========== */
     .block-container {{
-        background-color: rgba(255, 255, 255, 0.93) !important;
-        border-radius: 16px;
-        padding: 2rem !important;
-        margin: 1rem auto;
+        background-color: transparent !important;
+        padding: 1rem !important;
+        margin: 0 auto;
         max-width: 800px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+    }}
+    
+    /* ========== SPECIFIC ELEMENT BACKGROUNDS FOR READABILITY ========== */
+    /* Title area */
+    .main-title, .subtitle {{
+        background-color: rgba(255, 255, 255, 0.85);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+    }}
+    
+    /* Input fields container */
+    .stTextInput {{
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 0.5rem;
+        border-radius: 8px;
+    }}
+    
+    /* Question cards - already have background */
+    .question-card {{
+        background-color: rgba(255, 255, 255, 0.9) !important;
+    }}
+    
+    /* Radio button containers */
+    .stRadio > div > label,
+    [data-testid="stRadio"] > div > label {{
+        background-color: rgba(255, 255, 255, 0.9) !important;
+    }}
+    
+    /* General text that needs background */
+    .element-container:has(p), .element-container:has(h1), .element-container:has(h2), .element-container:has(h3) {{
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        margin: 0.25rem 0;
+    }}
+    
+    /* Buttons don't need white background - they're already black */
+    .stButton {{
+        background-color: transparent !important;
+    }}
+    
+    /* DataFrames/tables */
+    .stDataFrame, [data-testid="stDataFrame"] {{
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border-radius: 8px;
+        padding: 0.5rem;
     }}
     
     /* Force text to be dark on the white overlay */
