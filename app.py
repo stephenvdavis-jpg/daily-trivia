@@ -1,4 +1,4 @@
- """
+"""
 Daily Trivia App
 A minimalist trivia application with Google Sheets integration.
 Features: Global History, Advanced Stats, Streak Tracking, Hall of Fame
