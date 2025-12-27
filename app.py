@@ -375,62 +375,22 @@ st.markdown(f"""
         background-color: transparent !important;
     }}
     
-    /* ========== NO FULL-PAGE CARD - TRANSPARENT CONTAINER ========== */
+    /* ========== CLEAN CENTERED CARD ========== */
     .block-container {{
-        background-color: transparent !important;
-        padding: 1rem !important;
-        margin: 0 auto;
-        max-width: 800px;
+        background-color: rgba(255, 255, 255, 0.88) !important;
+        border-radius: 20px;
+        padding: 2rem !important;
+        margin: 2rem auto;
+        max-width: 700px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     }}
     
-    /* ========== SPECIFIC ELEMENT BACKGROUNDS FOR READABILITY ========== */
-    /* Title area */
-    .main-title, .subtitle {{
-        background-color: rgba(255, 255, 255, 0.85);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        display: inline-block;
-    }}
-    
-    /* Input fields container */
-    .stTextInput {{
-        background-color: rgba(255, 255, 255, 0.9);
-        padding: 0.5rem;
-        border-radius: 8px;
-    }}
-    
-    /* Question cards - already have background */
-    .question-card {{
-        background-color: rgba(255, 255, 255, 0.9) !important;
-    }}
-    
-    /* Radio button containers */
-    .stRadio > div > label,
-    [data-testid="stRadio"] > div > label {{
-        background-color: rgba(255, 255, 255, 0.9) !important;
-    }}
-    
-    /* General text that needs background */
-    .element-container:has(p), .element-container:has(h1), .element-container:has(h2), .element-container:has(h3) {{
-        background-color: rgba(255, 255, 255, 0.8);
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-        margin: 0.25rem 0;
-    }}
-    
-    /* Buttons don't need white background - they're already black */
-    .stButton {{
+    /* Remove any extra backgrounds on child elements */
+    .element-container {{
         background-color: transparent !important;
     }}
     
-    /* DataFrames/tables */
-    .stDataFrame, [data-testid="stDataFrame"] {{
-        background-color: rgba(255, 255, 255, 0.95) !important;
-        border-radius: 8px;
-        padding: 0.5rem;
-    }}
-    
-    /* Force text to be dark on the white overlay */
+    /* Force text to be dark */
     .stApp p, .stApp div, .stApp label {{
         color: #000000 !important;
     }}
