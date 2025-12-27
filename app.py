@@ -385,7 +385,7 @@ st.markdown(f"""
     
     /* ========== CLEAN CENTERED CARD ========== */
     .block-container {{
-        background-color: rgba(255, 255, 255, 0.88) !important;
+        background-color: rgba(255, 255, 255, 0.6) !important;
         border-radius: 20px;
         padding: 2rem !important;
         margin: 2rem auto;
