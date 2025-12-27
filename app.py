@@ -925,7 +925,7 @@ def show_quiz_screen():
             st.rerun()
         return
     
-    # Timer display
+    # Timer display (TOP)
     remaining = display_timer()
     
     # Auto-submit if time runs out
@@ -937,9 +937,11 @@ def show_quiz_screen():
     
     # Display questions
     questions = st.session_state.questions
+    total_questions = len(questions)
+    midpoint = total_questions // 2  # Calculate midpoint for middle timer
     
     for idx, row in questions.iterrows():
-        st.markdown(f'<div class="question-number">Question {idx + 1} of {len(questions)}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="question-number">Question {idx + 1} of {total_questions}</div>', unsafe_allow_html=True)
         st.markdown(f'<div class="question-text">{row["Question"]}</div>', unsafe_allow_html=True)
         
         options = [
@@ -962,11 +964,23 @@ def show_quiz_screen():
             st.session_state.answers[idx] = answer[0]  # Get just the letter
         
         st.markdown("---")
+        
+        # Add MIDDLE timer after the midpoint question
+        if idx == midpoint - 1:
+            st.markdown("#### ⏱️ Time Check:")
+            display_timer()
+            st.markdown("---")
+    
+    # Timer display (BOTTOM - before submit button)
+    st.markdown("#### ⏱️ Time Remaining:")
+    display_timer()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # Submit button
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("Submit Answers", use_container_width=True):
+        if st.button("Submit Answers — Wait 5 secs", use_container_width=True):
             submit_quiz()
     
     # Auto-refresh for timer (every second)
