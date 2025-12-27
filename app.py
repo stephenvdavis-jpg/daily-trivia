@@ -177,6 +177,12 @@ st.markdown("""
         color: #000000 !important;
     }
     
+    /* Placeholder text color */
+    .stTextInput > div > div > input::placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
     .stTextInput > div > div > input:focus {
         border-color: #000000 !important;
         box-shadow: 0 0 0 1px #000000;
@@ -379,7 +385,7 @@ st.markdown(f"""
     
     /* ========== CLEAN CENTERED CARD ========== */
     .block-container {{
-        background-color: rgba(255, 255, 255, 0.6) !important;
+        background-color: rgba(255, 255, 255, 0.88) !important;
         border-radius: 20px;
         padding: 2rem !important;
         margin: 2rem auto;
